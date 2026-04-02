@@ -82,3 +82,60 @@ create table public.portfolio (
 alter table public.portfolio enable row level security;
 create policy "Users manage own portfolio" on public.portfolio
   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+-- 5. Metas financeiras
+create table public.goals (
+  id bigint generated always as identity primary key,
+  user_id uuid references auth.users on delete cascade not null default auth.uid(),
+  name text not null,
+  target numeric not null,
+  deadline text default '',
+  category text default '',
+  contributions jsonb default '[]',
+  created_at timestamptz default now()
+);
+
+alter table public.goals enable row level security;
+create policy "Users manage own goals" on public.goals
+  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+-- 6. Categorias customizáveis
+create table public.categories (
+  id bigint generated always as identity primary key,
+  user_id uuid references auth.users on delete cascade not null default auth.uid(),
+  cats jsonb default '[]',
+  created_at timestamptz default now()
+);
+
+alter table public.categories enable row level security;
+create policy "Users manage own categories" on public.categories
+  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+-- 7. Limites por categoria
+create table public.limits (
+  id bigint generated always as identity primary key,
+  user_id uuid references auth.users on delete cascade not null default auth.uid(),
+  limits_data jsonb default '{}',
+  created_at timestamptz default now()
+);
+
+alter table public.limits enable row level security;
+create policy "Users manage own limits" on public.limits
+  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+-- 8. Dados financeiros (backup completo do localStorage)
+create table public.user_data (
+  id uuid references auth.users on delete cascade primary key,
+  data jsonb default '{}',
+  fixed jsonb default '[]',
+  portfolio jsonb default '[]',
+  categories jsonb default '[]',
+  goals jsonb default '[]',
+  limits_data jsonb default '{}',
+  favorites jsonb default '[]',
+  updated_at timestamptz default now()
+);
+
+alter table public.user_data enable row level security;
+create policy "Users manage own data" on public.user_data
+  for all using (auth.uid() = id) with check (auth.uid() = id);
